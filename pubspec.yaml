@@ -1,0 +1,38 @@
+name: appstudyhub
+description: "Dự án ứng dụng học tập StudyHub - Flutter Clean Architecture"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter_skill: ^0.2.6
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.3.5
+  intl: ^0.20.2
+  shimmer: ^3.0.0
+  google_fonts: ^6.2.1
+  # Các thư viện bạn đang dùng cho logic Auth và Bloc
+  flutter_bloc: ^8.1.3
+  bloc: ^8.1.2
+  dartz: ^0.10.1
+  cupertino_icons: ^1.0.6
+  equatable: ^2.0.8
+  image_picker: ^1.2.1
+  video_player: ^2.11.0
+  get_it: ^9.2.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  # Dòng này cực kỳ quan trọng để sửa lỗi ô vuông thay vì hiện icon
+  uses-material-design: true
+
+  # Nếu bạn có sử dụng hình ảnh logo từ thư mục assets, hãy bỏ comment phần này
+  # assets:
+  #   - assets/images/
