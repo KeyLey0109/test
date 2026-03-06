@@ -51,7 +51,7 @@ class _PostCardState extends State<PostCard> {
         if (state is PostLoaded) {
           // Lấy dữ liệu mới nhất của bài viết này từ State của Bloc
           displayPost = state.posts.firstWhere(
-                (p) => p.id == widget.post.id,
+            (p) => p.id == widget.post.id,
             orElse: () => widget.post,
           );
         }
@@ -65,7 +65,9 @@ class _PostCardState extends State<PostCard> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 0.5)],
+            boxShadow: const [
+              BoxShadow(color: Colors.black12, blurRadius: 0.5)
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +88,8 @@ class _PostCardState extends State<PostCard> {
               // Thống kê tương tác
               if (displayPost.likeCount > 0 || totalComments > 0)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 10.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -96,37 +99,45 @@ class _PostCardState extends State<PostCard> {
                             _buildLikeIconStack(),
                             const SizedBox(width: 6),
                             Text('${displayPost.likeCount}',
-                                style: TextStyle(color: Colors.grey[700], fontSize: 13)),
+                                style: TextStyle(
+                                    color: Colors.grey[700], fontSize: 13)),
                           ],
                         )
                       else
                         const SizedBox.shrink(),
-
                       GestureDetector(
                         onTap: () => _openCommentSheet(context, displayPost.id),
                         child: Text(
                           totalComments == 0 ? '' : '$totalComments bình luận',
-                          style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                          style:
+                              TextStyle(color: Colors.grey[700], fontSize: 13),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-              const Divider(height: 1, thickness: 0.2, indent: 12, endIndent: 12),
+              const Divider(
+                  height: 1, thickness: 0.2, indent: 12, endIndent: 12),
 
               // Nút Like, Bình luận, Chia sẻ
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                 child: Row(
                   children: [
                     _PostButton(
-                      iconData: isMyLike ? Icons.thumb_up_rounded : Icons.thumb_up_off_alt_rounded,
+                      iconData: isMyLike
+                          ? Icons.thumb_up_rounded
+                          : Icons.thumb_up_off_alt_rounded,
                       label: 'Thích',
-                      color: isMyLike ? const Color(0xFF1877F2) : Colors.black87,
+                      color:
+                          isMyLike ? const Color(0xFF1877F2) : Colors.black87,
                       onTap: () {
                         // Gọi sự kiện ToggleLike với postId
-                        context.read<PostBloc>().add(ToggleLike(postId: displayPost.id));
+                        context
+                            .read<PostBloc>()
+                            .add(ToggleLike(postId: displayPost.id));
                       },
                     ),
                     _PostButton(
@@ -139,7 +150,9 @@ class _PostCardState extends State<PostCard> {
                       label: 'Chia sẻ',
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Tính năng chia sẻ sẽ sớm có mặt trên StudyHub!")),
+                          const SnackBar(
+                              content: Text(
+                                  "Tính năng chia sẻ sẽ sớm có mặt trên StudyHub!")),
                         );
                       },
                     ),
@@ -162,14 +175,17 @@ class _PostCardState extends State<PostCard> {
           text,
           maxLines: _isExpanded ? null : 4,
           overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.black),
+          style:
+              const TextStyle(fontSize: 15, height: 1.4, color: Colors.black),
         ),
         if (text.length > limit && !_isExpanded)
           GestureDetector(
             onTap: () => setState(() => _isExpanded = true),
             child: const Padding(
               padding: EdgeInsets.only(top: 4.0),
-              child: Text("Xem thêm", style: TextStyle(color: Color(0xFF1877F2), fontWeight: FontWeight.bold)),
+              child: Text("Xem thêm",
+                  style: TextStyle(
+                      color: Color(0xFF1877F2), fontWeight: FontWeight.bold)),
             ),
           ),
       ],
@@ -177,20 +193,29 @@ class _PostCardState extends State<PostCard> {
   }
 
   Widget _buildMediaSection(PostEntity post) {
-    // Sử dụng imagePath và videoPath từ Entity mới
-    if (post.hasImage) {
-      final path = post.imagePath!;
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: path.startsWith('http')
-            ? Image.network(path, width: double.infinity, fit: BoxFit.cover)
-            : Image.file(File(path), width: double.infinity, fit: BoxFit.cover),
-      );
+    if (!post.hasImage && !post.hasVideo) {
+      return const SizedBox.shrink();
     }
-    if (post.hasVideo) {
-      return PostVideoPlayer(videoPath: post.videoPath!);
-    }
-    return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (post.hasImage)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: post.imagePath!.startsWith('http')
+                ? Image.network(post.imagePath!,
+                    width: double.infinity, fit: BoxFit.cover)
+                : Image.file(File(post.imagePath!),
+                    width: double.infinity, fit: BoxFit.cover),
+          ),
+        if (post.hasVideo)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: PostVideoPlayer(videoPath: post.videoPath!),
+          ),
+      ],
+    );
   }
 
   Widget _buildLikeIconStack() {
@@ -202,8 +227,7 @@ class _PostCardState extends State<PostCard> {
             end: Alignment.bottomRight,
             colors: [Color(0xFF1877F2), Color(0xFF3B5998)],
           ),
-          shape: BoxShape.circle
-      ),
+          shape: BoxShape.circle),
       child: const Icon(Icons.thumb_up, color: Colors.white, size: 10),
     );
   }
@@ -231,7 +255,8 @@ class _PostHeader extends StatelessWidget {
           backgroundColor: const Color(0xFF1877F2).withValues(alpha: 0.1),
           child: Text(
             post.userName.isNotEmpty ? post.userName[0].toUpperCase() : '?',
-            style: const TextStyle(color: Color(0xFF1877F2), fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Color(0xFF1877F2), fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(width: 10.0),
@@ -239,7 +264,9 @@ class _PostHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(post.userName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(post.userName,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
               const SizedBox(height: 2),
               Row(
                 children: [
@@ -291,7 +318,11 @@ class _PostButton extends StatelessWidget {
               children: [
                 Icon(iconData, color: color, size: 18),
                 const SizedBox(width: 6.0),
-                Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13)),
+                Text(label,
+                    style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13)),
               ],
             ),
           ),

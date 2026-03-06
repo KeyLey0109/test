@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Pages
 import 'home_page.dart';
+import 'video_page.dart';
 import '../../../notifications/presentation/pages/notification_screen.dart';
 import '../../../profile/presentation/pages/profile_screen.dart';
 
@@ -36,16 +37,7 @@ class _RootPageState extends State<RootPage> {
     // Lưu ý: KHÔNG dùng từ khóa 'const' trước mảng này vì ProfileScreen nhận biến động.
     final List<Widget> pages = [
       const HomePage(),
-      const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.video_library_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text("Tính năng Video đang phát triển", style: TextStyle(color: Colors.grey)),
-          ],
-        ),
-      ),
+      const VideoPage(),
       const NotificationScreen(),
       // Chỉ render Profile khi đã có ID, tránh lỗi truyền chuỗi rỗng
       currentUserId.isNotEmpty
@@ -68,7 +60,8 @@ class _RootPageState extends State<RootPage> {
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.shade200, width: 0.5)),
+        border:
+            Border(top: BorderSide(color: Colors.grey.shade200, width: 0.5)),
       ),
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -121,7 +114,9 @@ class _RootPageState extends State<RootPage> {
           isLabelVisible: unreadCount > 0,
           label: Text(unreadCount > 9 ? '9+' : '$unreadCount'),
           backgroundColor: Colors.red,
-          child: Icon(isActive ? Icons.notifications : Icons.notifications_none_outlined),
+          child: Icon(isActive
+              ? Icons.notifications
+              : Icons.notifications_none_outlined),
         );
       },
     );

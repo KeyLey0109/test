@@ -1,4 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Thêm quyền truy cập Internet để phát video từ mạng -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Thêm quyền truy cập bộ nhớ để đọc file video từ thư viện (image_picker) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <!-- Cho Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
     <application
         android:label="appstudyhub"
         android:name="${applicationName}"

@@ -11,16 +11,21 @@ import '../../domain/usecases/create_post_usecase.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../comment/domain/entities/comment_entity.dart';
+import '../../../notifications/presentation/bloc/notification_bloc.dart';
+import '../../../notifications/presentation/bloc/notification_event.dart';
+import '../../../notifications/domain/entities/notification_entity.dart';
 
 class PostBloc extends Bloc<PostEvent, PostState> {
   final GetPostsUseCase getPostsUseCase;
   final CreatePostUseCase createPostUseCase;
   final AuthBloc authBloc;
+  final NotificationBloc notificationBloc;
 
   PostBloc({
     required this.getPostsUseCase,
     required this.createPostUseCase,
     required this.authBloc,
+    required this.notificationBloc,
   }) : super(PostInitial()) {
     // Đăng ký các sự kiện
     on<LoadPosts>(_onLoadPosts);
@@ -43,13 +48,14 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     final result = await getPostsUseCase();
 
     result.fold(
-          (failure) => emit(PostError(message: failure.toString())),
-          (posts) => emit(PostLoaded(posts: posts)),
+      (failure) => emit(PostError(message: failure.toString())),
+      (posts) => emit(PostLoaded(posts: posts)),
     );
   }
 
   /// Xử lý tạo bài viết mới
-  Future<void> _onCreatePost(CreatePostRequested event, Emitter<PostState> emit) async {
+  Future<void> _onCreatePost(
+      CreatePostRequested event, Emitter<PostState> emit) async {
     final user = _currentAuth?.user;
     if (user == null) return;
 
@@ -66,13 +72,25 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     );
 
     result.fold(
-          (failure) {
+      (failure) {
         if (state is PostLoaded) {
           emit((state as PostLoaded).copyWith(isCreating: false));
         }
         emit(PostError(message: failure.toString()));
       },
-          (_) => add(const LoadPosts()), // Tải lại danh sách sau khi tạo thành công
+      (_) {
+        add(const LoadPosts()); // Tải lại danh sách sau khi tạo thành công
+
+        // Bắn thông báo ngay lập tức
+        notificationBloc.add(NotificationReceived(NotificationEntity(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          senderId: 'system',
+          senderName: 'Hệ thống',
+          message: 'Bạn vừa đăng một bài viết mới.',
+          type: NotificationType.postMention,
+          timestamp: DateTime.now(),
+        )));
+      },
     );
   }
 
@@ -87,7 +105,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       final List<PostEntity> updatedPosts = currentState.posts.map((post) {
         if (post.id == event.postId) {
           // Tạo bản sao mới của danh sách likes để kích hoạt Equatable
-          final List<String> newLikedByUsers = List<String>.from(post.likedByUsers);
+          final List<String> newLikedByUsers =
+              List<String>.from(post.likedByUsers);
 
           if (newLikedByUsers.contains(userId)) {
             newLikedByUsers.remove(userId);
@@ -125,7 +144,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
           // Cập nhật danh sách bình luận bằng cách tạo List mới
           final List<CommentEntity> updatedComments =
-          List<CommentEntity>.from(post.comments)..add(newComment);
+              List<CommentEntity>.from(post.comments)..add(newComment);
 
           return post.copyWith(comments: updatedComments);
         }
@@ -151,9 +170,8 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   void _onDeletePost(DeletePost event, Emitter<PostState> emit) {
     if (state is PostLoaded) {
       final currentState = state as PostLoaded;
-      final List<PostEntity> updatedPosts = currentState.posts
-          .where((post) => post.id != event.postId)
-          .toList();
+      final List<PostEntity> updatedPosts =
+          currentState.posts.where((post) => post.id != event.postId).toList();
       emit(currentState.copyWith(posts: updatedPosts));
     }
   }

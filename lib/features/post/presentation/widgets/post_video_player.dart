@@ -17,19 +17,33 @@ class _PostVideoPlayerState extends State<PostVideoPlayer> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
 
+  bool _hasError = false;
+
   @override
   void initState() {
     super.initState();
-    // Khởi tạo controller từ đường dẫn file trên máy sinh viên PYU
-    _controller = VideoPlayerController.file(File(widget.videoPath))
-      ..initialize().then((_) {
-        // Đảm bảo widget vẫn còn tồn tại trong tree trước khi setState
-        if (mounted) {
-          setState(() {
-            _isInitialized = true;
-          });
-        }
-      });
+    // Khởi tạo controller từ đường dẫn file trên máy sinh viên PYU hoặc URL mạng
+    if (widget.videoPath.startsWith('http')) {
+      _controller =
+          VideoPlayerController.networkUrl(Uri.parse(widget.videoPath));
+    } else {
+      _controller = VideoPlayerController.file(File(widget.videoPath));
+    }
+
+    _controller.initialize().then((_) {
+      // Đảm bảo widget vẫn còn tồn tại trong tree trước khi setState
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    }).catchError((error) {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+        });
+      }
+    });
 
     // Tùy chọn: Tự động lặp lại video
     _controller.setLooping(true);
@@ -44,6 +58,24 @@ class _PostVideoPlayerState extends State<PostVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    if (_hasError) {
+      return Container(
+        height: 250,
+        decoration: const BoxDecoration(color: Colors.black),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, color: Colors.white54, size: 40),
+              SizedBox(height: 8),
+              Text("Không thể tải video",
+                  style: TextStyle(color: Colors.white54)),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (!_isInitialized) {
       return Container(
         height: 250,
@@ -58,7 +90,9 @@ class _PostVideoPlayerState extends State<PostVideoPlayer> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _controller.value.isPlaying ? _controller.pause() : _controller.play();
+          _controller.value.isPlaying
+              ? _controller.pause()
+              : _controller.play();
         });
       },
       child: Container(

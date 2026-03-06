@@ -44,10 +44,17 @@ class MyApp extends StatelessWidget {
           create: (_) => di.sl<AuthBloc>()..add(AppStarted()),
         ),
 
-        // PostBloc nhận AuthBloc để biết "ai" đang tương tác bài viết
+        // Chú ý: Cần Đổi vị trí NotificationBloc lên trước PostBloc để có thể Inject param2
+        BlocProvider<NotificationBloc>(
+          create: (_) =>
+              di.sl<NotificationBloc>()..add(const LoadNotifications()),
+        ),
+
+        // PostBloc nhận AuthBloc để biết "ai" đang tương tác bài viết và NotificationBloc để đẩy thông báo
         BlocProvider<PostBloc>(
           create: (context) => di.sl<PostBloc>(
             param1: BlocProvider.of<AuthBloc>(context),
+            param2: BlocProvider.of<NotificationBloc>(context),
           )..add(const LoadPosts()),
         ),
 
@@ -59,10 +66,6 @@ class MyApp extends StatelessWidget {
         ),
 
         BlocProvider<CommentBloc>(create: (_) => di.sl<CommentBloc>()),
-
-        BlocProvider<NotificationBloc>(
-          create: (_) => di.sl<NotificationBloc>()..add(const LoadNotifications()),
-        ),
       ],
       child: MaterialApp(
         title: 'StudyHub',
