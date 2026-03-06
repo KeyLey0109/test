@@ -319,8 +319,9 @@ class HomePage extends StatelessWidget {
                     onPressed: () async {
                       final XFile? file =
                           await picker.pickImage(source: ImageSource.gallery);
-                      if (file != null)
+                      if (file != null) {
                         setModalState(() => selectedImage = File(file.path));
+                      }
                     },
                   ),
                   IconButton(
@@ -328,8 +329,9 @@ class HomePage extends StatelessWidget {
                     onPressed: () async {
                       final XFile? file =
                           await picker.pickVideo(source: ImageSource.gallery);
-                      if (file != null)
+                      if (file != null) {
                         setModalState(() => selectedVideo = File(file.path));
+                      }
                     },
                   ),
                 ],

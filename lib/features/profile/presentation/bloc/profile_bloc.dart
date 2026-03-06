@@ -48,7 +48,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           },
         );
       } else {
-        emit(ProfileError("Bạn cần đăng nhập để thực hiện thao tác này"));
+        emit(const ProfileError("Bạn cần đăng nhập để thực hiện thao tác này"));
       }
     });
 
