@@ -61,32 +61,45 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
   /// 1. Xử lý Load bài viết
   Future<void> _onLoadPosts(LoadPosts event, Emitter<PostState> emit) async {
-    final authUser = _currentAuth?.user;
-    _currentUserId = authUser?.id;
-    emit(PostLoading());
+    final bool isSwitchingContext = _currentUserId != event.userId;
+    _currentUserId = event.userId;
 
-    // Luôn load từ bộ nhớ tạm Global của máy trước
+    // Chỉ hiện trạng thái Loading nếu đang chuyển ngữ cảnh (Home <-> Wall)
+    // hoặc chưa có dữ liệu nào trong RAM.
+    if (state is! PostLoaded || isSwitchingContext) {
+      emit(PostLoading());
+    }
+
+    // 1. Tải ngay từ bộ nhớ máy (Local Cache)
     final localPosts = await localDataSource.getLastPosts();
     if (localPosts.isNotEmpty) {
+      List<PostEntity> filteredLocal = List<PostEntity>.from(localPosts);
       if (event.userId != null) {
-        // Nếu load Wall, lọc thủ công từ cache local
-        final filteredLocal = localPosts
+        filteredLocal = localPosts
             .where((p) => p.userId == event.userId || p.userId == 'admin')
             .toList();
-        emit(PostLoaded(posts: List<PostEntity>.from(filteredLocal)));
-      } else {
-        emit(PostLoaded(posts: List<PostEntity>.from(localPosts)));
+      }
+
+      // Emit ngay lập tức nếu dữ liệu local khớp với yêu cầu
+      if (state is! PostLoaded || isSwitchingContext) {
+        emit(PostLoaded(posts: filteredLocal));
       }
     }
 
+    // 2. Tải bản mới nhất từ Repository (nếu có API/Logic fetch)
     final result = await getPostsUseCase(userId: event.userId);
     result.fold(
       (failure) {
-        if (localPosts.isEmpty) emit(PostError(message: failure.toString()));
+        // Chỉ hiện lỗi nếu hiện tại hoàn toàn không có dữ liệu
+        if (state is! PostLoaded) {
+          emit(PostError(message: failure.toString()));
+        }
       },
       (posts) {
+        // Cập nhật state với dữ liệu mới nhất mà không gây flickering
         emit(PostLoaded(posts: posts));
-        // CHỈ cập nhật cache local khi tải Home Feed (event.userId == null)
+
+        // Cập nhật bộ nhớ máy nếu là Home Feed (userId == null)
         if (event.userId == null) {
           final models = posts.map((e) => PostModel.fromEntity(e)).toList();
           localDataSource.cachePosts(models);

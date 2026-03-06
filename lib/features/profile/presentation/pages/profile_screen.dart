@@ -16,7 +16,7 @@ import '../../domain/entities/profile_entity.dart';
 import '../widgets/friend_list_widget.dart';
 import 'edit_profile_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final String userId;
   final bool isCurrentUser;
 
@@ -27,11 +27,20 @@ class ProfileScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    // Gọi fetch profile và bài viết ngay khi vào màn hình
-    context.read<ProfileBloc>().add(FetchProfileEvent(userId));
-    context.read<PostBloc>().add(LoadPosts(userId: userId));
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
 
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Chỉ gọi fetch profile và bài viết ngay khi khởi tạo màn hình
+    context.read<ProfileBloc>().add(FetchProfileEvent(widget.userId));
+    context.read<PostBloc>().add(LoadPosts(userId: widget.userId));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
     final String uName =
         (authState is AuthSuccess) ? authState.user.name : "Sinh viên";
@@ -58,8 +67,10 @@ class ProfileScreen extends StatelessWidget {
 
             return RefreshIndicator(
               onRefresh: () async {
-                context.read<ProfileBloc>().add(FetchProfileEvent(userId));
-                context.read<PostBloc>().add(LoadPosts(userId: userId));
+                context
+                    .read<ProfileBloc>()
+                    .add(FetchProfileEvent(widget.userId));
+                context.read<PostBloc>().add(LoadPosts(userId: widget.userId));
               },
               child: CustomScrollView(
                 slivers: [
@@ -70,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
                   SliverToBoxAdapter(child: _buildFriendsSection(profile)),
 
                   // Chỉ hiện thanh đăng bài nếu là trang cá nhân của mình
-                  if (isCurrentUser) ...[
+                  if (widget.isCurrentUser) ...[
                     const SliverToBoxAdapter(child: SizedBox(height: 8)),
                     SliverToBoxAdapter(
                         child: _buildStatusHeader(context, uName)),
@@ -105,6 +116,8 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // --- WIDGETS PHÂN TÁCH ---
+  // ... (giữ nguyên các phương thức helper nhưng cập nhật tham chiếu widget.userId nếu cần)
+  // Thực tế các phương thức helper bên dưới đa số dùng tham số truyền vào hoặc context.
 
   Widget _buildPostList() {
     return BlocBuilder<PostBloc, PostState>(
@@ -186,7 +199,6 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showCreatePostSheet(BuildContext context, String uName) {
-    // Reusing the logic from HomePage. In a real app, this should be a shared widget.
     final TextEditingController controller = TextEditingController();
     XFile? selectedImage;
     XFile? selectedVideo;
@@ -353,7 +365,7 @@ class ProfileScreen extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, color: Colors.black87),
                 ),
                 const SizedBox(height: 16),
-                isCurrentUser
+                widget.isCurrentUser
                     ? _buildCurrentUserActions(context, profile)
                     : _buildOtherUserActions(context, profile),
                 const SizedBox(height: 16),
