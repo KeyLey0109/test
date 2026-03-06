@@ -28,7 +28,4 @@ abstract class PostRepository {
     required String userName,
     String? parentCommentId,
   });
-
-  /// Xóa cache bài viết trong RAM (thường dùng khi chuyển tài khoản).
-  void clearCache();
 }

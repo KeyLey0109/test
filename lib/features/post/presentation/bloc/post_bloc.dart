@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'post_event.dart';
 import 'post_state.dart';
@@ -63,23 +62,21 @@ class PostBloc extends Bloc<PostEvent, PostState> {
   /// 1. Xử lý Load bài viết
   Future<void> _onLoadPosts(LoadPosts event, Emitter<PostState> emit) async {
     final authUser = _currentAuth?.user;
-
-    // Nếu chuyển sang xem Feed chung (userId == null) hoặc Xem tường của chính mình,
-    // ta cần kiểm tra xem có phải là đổi Account không.
-    if (_currentUserId != authUser?.id && authUser != null) {
-      debugPrint(
-          "🔄 Phát hiện đổi tài khoản. Đang làm mới cache cho User: ${authUser.id}");
-      getPostsUseCase.repository.clearCache();
-    }
-
     _currentUserId = authUser?.id;
     emit(PostLoading());
 
-    // Nếu event.userId là null (Home Feed), load từ phân vùng Global
-    // Nếu event.userId != null (Wall), load từ phân vùng của User đó
-    final localPosts = await localDataSource.getLastPosts(userId: event.userId);
+    // Luôn load từ bộ nhớ tạm Global của máy trước
+    final localPosts = await localDataSource.getLastPosts();
     if (localPosts.isNotEmpty) {
-      emit(PostLoaded(posts: List<PostEntity>.from(localPosts)));
+      if (event.userId != null) {
+        // Nếu load Wall, lọc thủ công từ cache local
+        final filteredLocal = localPosts
+            .where((p) => p.userId == event.userId || p.userId == 'admin')
+            .toList();
+        emit(PostLoaded(posts: List<PostEntity>.from(filteredLocal)));
+      } else {
+        emit(PostLoaded(posts: List<PostEntity>.from(localPosts)));
+      }
     }
 
     final result = await getPostsUseCase(userId: event.userId);
@@ -89,11 +86,10 @@ class PostBloc extends Bloc<PostEvent, PostState> {
       },
       (posts) {
         emit(PostLoaded(posts: posts));
-        // CHỈ cache khi đây là lần tải toàn bộ (event.userId == null)
-        // và lưu vào phân vùng của người đang đăng nhập
+        // CHỈ cập nhật cache local khi tải Home Feed (event.userId == null)
         if (event.userId == null) {
           final models = posts.map((e) => PostModel.fromEntity(e)).toList();
-          localDataSource.cachePosts(models, userId: authUser?.id);
+          localDataSource.cachePosts(models);
         }
       },
     );

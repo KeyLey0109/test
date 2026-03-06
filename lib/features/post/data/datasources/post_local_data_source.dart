@@ -4,36 +4,29 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/post_model.dart';
 
 abstract class PostLocalDataSource {
-  Future<void> cachePosts(List<PostModel> postsToCache, {String? userId});
-  Future<List<PostModel>> getLastPosts({String? userId});
+  Future<void> cachePosts(List<PostModel> postsToCache);
+  Future<List<PostModel>> getLastPosts();
 }
 
 class PostLocalDataSourceImpl implements PostLocalDataSource {
   final SharedPreferences sharedPreferences;
 
-  // Key cơ sở để lưu bài viết
-  static const _baseKey = 'CACHED_POSTS_USER_';
-  // Key cũ để đảm bảo không mất dữ liệu nếu userId là null
-  static const _legacyKey = 'CACHED_POSTS_STUDYHUB_V2';
+  // Sử dụng một key duy nhất cho tất cả bài viết của mọi User
+  static const cachedPostsKey = 'CACHED_POSTS_STUDYHUB_V2';
 
   PostLocalDataSourceImpl({required this.sharedPreferences});
 
-  String _getKey(String? userId) =>
-      userId != null ? '$_baseKey$userId' : _legacyKey;
-
   @override
-  Future<void> cachePosts(List<PostModel> postsToCache,
-      {String? userId}) async {
+  Future<void> cachePosts(List<PostModel> postsToCache) async {
     final List<String> jsonPostList =
         postsToCache.map((post) => json.encode(post.toJson())).toList();
 
-    await sharedPreferences.setStringList(_getKey(userId), jsonPostList);
+    await sharedPreferences.setStringList(cachedPostsKey, jsonPostList);
   }
 
   @override
-  Future<List<PostModel>> getLastPosts({String? userId}) async {
-    final key = _getKey(userId);
-    final jsonList = sharedPreferences.getStringList(key);
+  Future<List<PostModel>> getLastPosts() async {
+    final jsonList = sharedPreferences.getStringList(cachedPostsKey);
 
     if (jsonList == null || jsonList.isEmpty) {
       return [];
@@ -51,8 +44,8 @@ class PostLocalDataSourceImpl implements PostLocalDataSource {
       }
       return posts;
     } catch (e) {
-      debugPrint("Lỗi khi tải bài viết ($key): $e");
-      await sharedPreferences.remove(key);
+      debugPrint("Lỗi khi tải bài viết: $e");
+      await sharedPreferences.remove(cachedPostsKey);
       return [];
     }
   }
