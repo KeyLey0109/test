@@ -1,3 +1,11 @@
+import 'package:appstudyhub/features/post/presentation/bloc/post_bloc.dart';
+import 'package:appstudyhub/features/post/presentation/bloc/post_event.dart';
+import 'package:appstudyhub/features/post/presentation/bloc/post_state.dart';
+import 'package:appstudyhub/features/post/presentation/widgets/post_card.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:appstudyhub/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:appstudyhub/features/auth/presentation/bloc/auth_state.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -20,8 +28,13 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Gọi fetch profile ngay khi vào màn hình
+    // Gọi fetch profile và bài viết ngay khi vào màn hình
     context.read<ProfileBloc>().add(FetchProfileEvent(userId));
+    context.read<PostBloc>().add(LoadPosts(userId: userId));
+
+    final authState = context.watch<AuthBloc>().state;
+    final String uName =
+        (authState is AuthSuccess) ? authState.user.name : "Sinh viên";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
@@ -35,36 +48,55 @@ class ProfileScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: BlocBuilder<ProfileBloc, ProfileState>(
-        builder: (context, state) {
-          if (state is ProfileLoading) {
+        builder: (context, profileState) {
+          if (profileState is ProfileLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state is ProfileLoaded) {
-            final profile = state.profile;
+          if (profileState is ProfileLoaded) {
+            final profile = profileState.profile;
 
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // --- PHẦN 1: HEADER ---
-                  _buildHeader(context, profile),
-                  const SizedBox(height: 8),
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<ProfileBloc>().add(FetchProfileEvent(userId));
+                context.read<PostBloc>().add(LoadPosts(userId: userId));
+              },
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _buildHeader(context, profile)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                  SliverToBoxAdapter(child: _buildInfoSection(profile)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                  SliverToBoxAdapter(child: _buildFriendsSection(profile)),
 
-                  // --- PHẦN 2: THÔNG TIN CHI TIẾT ---
-                  _buildInfoSection(profile),
-                  const SizedBox(height: 8),
+                  // Chỉ hiện thanh đăng bài nếu là trang cá nhân của mình
+                  if (isCurrentUser) ...[
+                    const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                    SliverToBoxAdapter(
+                        child: _buildStatusHeader(context, uName)),
+                  ],
 
-                  // --- PHẦN 3: BẠN BÈ ---
-                  _buildFriendsSection(profile),
-                  const SizedBox(height: 20),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Text(
+                        "Bài viết",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+
+                  _buildPostList(),
+
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
                 ],
               ),
             );
           }
 
-          if (state is ProfileError) {
-            return Center(child: Text(state.message));
+          if (profileState is ProfileError) {
+            return Center(child: Text(profileState.message));
           }
           return const SizedBox.shrink();
         },
@@ -73,6 +105,191 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // --- WIDGETS PHÂN TÁCH ---
+
+  Widget _buildPostList() {
+    return BlocBuilder<PostBloc, PostState>(
+      builder: (context, state) {
+        if (state is PostLoading) {
+          return const SliverToBoxAdapter(
+            child: Center(
+                child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )),
+          );
+        }
+
+        if (state is PostLoaded) {
+          if (state.posts.isEmpty) {
+            return const SliverToBoxAdapter(
+              child: Center(
+                  child: Padding(
+                padding: EdgeInsets.all(40.0),
+                child: Text("Chưa có bài viết nào",
+                    style: TextStyle(color: Colors.grey)),
+              )),
+            );
+          }
+
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final post = state.posts[index];
+                return PostCard(key: ValueKey(post.id), post: post);
+              },
+              childCount: state.posts.length,
+            ),
+          );
+        }
+
+        return const SliverToBoxAdapter(child: SizedBox.shrink());
+      },
+    );
+  }
+
+  Widget _buildStatusHeader(BuildContext context, String userName) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border:
+            Border(bottom: BorderSide(color: Color(0xFFE4E6EB), width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: Colors.grey[200],
+            child: const Icon(Icons.person, color: Colors.grey),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _showCreatePostSheet(context, userName),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F2F5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "Bạn đang nghĩ gì, $userName?",
+                  style: const TextStyle(color: Colors.black54, fontSize: 14),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreatePostSheet(BuildContext context, String uName) {
+    // Reusing the logic from HomePage. In a real app, this should be a shared widget.
+    final TextEditingController controller = TextEditingController();
+    XFile? selectedImage;
+    XFile? selectedVideo;
+    final ImagePicker picker = ImagePicker();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Tạo bài viết",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  TextButton(
+                    onPressed: () {
+                      if (controller.text.trim().isNotEmpty ||
+                          selectedImage != null ||
+                          selectedVideo != null) {
+                        final authState = context.read<AuthBloc>().state;
+                        if (authState is AuthSuccess) {
+                          context.read<PostBloc>().add(CreatePostRequested(
+                                content: controller.text.trim(),
+                                userId: authState.user.id,
+                                userName: authState.user.name,
+                                imagePath: selectedImage?.path,
+                                videoPath: selectedVideo?.path,
+                                userAvatarUrl: authState.user.avatarUrl,
+                              ));
+                        }
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text("ĐĂNG",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1877F2))),
+                  ),
+                ],
+              ),
+              TextField(
+                controller: controller,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                    hintText: "Bạn đang nghĩ gì?", border: InputBorder.none),
+              ),
+              if (selectedImage != null || selectedVideo != null)
+                ListTile(
+                  leading: const Icon(Icons.attach_file, color: Colors.blue),
+                  title: const Text("File đã chọn",
+                      style: TextStyle(fontSize: 12)),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setModalState(() {
+                      selectedImage = null;
+                      selectedVideo = null;
+                    }),
+                  ),
+                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.image, color: Colors.green),
+                    onPressed: () async {
+                      final XFile? file =
+                          await picker.pickImage(source: ImageSource.gallery);
+                      if (file != null) {
+                        setModalState(() => selectedImage = file);
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.videocam, color: Colors.red),
+                    onPressed: () async {
+                      final XFile? file =
+                          await picker.pickVideo(source: ImageSource.gallery);
+                      if (file != null) {
+                        setModalState(() => selectedVideo = file);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildHeader(BuildContext context, ProfileEntity profile) {
     return Container(
@@ -90,9 +307,9 @@ class ProfileScreen extends StatelessWidget {
                   color: Colors.blue.shade100,
                   image: profile.coverUrl != null
                       ? DecorationImage(
-                    image: NetworkImage(profile.coverUrl!),
-                    fit: BoxFit.cover,
-                  )
+                          image: NetworkImage(profile.coverUrl!),
+                          fit: BoxFit.cover,
+                        )
                       : null,
                 ),
               ),
@@ -111,7 +328,8 @@ class ProfileScreen extends StatelessWidget {
                         ? NetworkImage(profile.avatarUrl!)
                         : null,
                     child: profile.avatarUrl == null
-                        ? const Icon(Icons.person, size: 60, color: Colors.white)
+                        ? const Icon(Icons.person,
+                            size: 60, color: Colors.white)
                         : null,
                   ),
                 ),
@@ -126,7 +344,8 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 Text(
                   profile.userName,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -173,7 +392,6 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Sửa lỗi vàng: Thêm const cho phần tiêu đề tĩnh
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -185,7 +403,6 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          // Sửa lỗi đỏ List<Object> & lỗi vàng Null check
           FriendListWidget(
             friends: profile.friends.cast<ProfileEntity>(),
           ),
