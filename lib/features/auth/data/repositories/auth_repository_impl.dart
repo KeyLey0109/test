@@ -10,17 +10,13 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.fakeDataSource});
 
   @override
-<<<<<<< HEAD
   Future<Either<String, UserEntity>> login(
       String email, String password) async {
-=======
-  Future<Either<String, UserEntity>> login(String email, String password) async {
->>>>>>> origin/feature
     try {
       // Gọi logic từ FakeAuthDataSource
       final userData = await fakeDataSource.login(email, password);
 
-      // Chuyển đổi dữ liệu từ Map sang Entity (Giả sử bạn đã có UserEntity)
+      // Chuyển đổi dữ liệu từ Map sang Entity
       return Right(UserEntity(
         id: userData['id'],
         name: userData['name'],
@@ -36,17 +32,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<String, UserEntity>> register(
       String name, String email, String password) async {
     try {
-<<<<<<< HEAD
       final newUser = await fakeDataSource.register(name, email, password);
 
       // Sau khi đăng ký thành công, trả về một Entity thực
       return Right(UserEntity(id: newUser['id']!, name: name, email: email));
-=======
-      await fakeDataSource.register(name, email, password);
-
-      // Sau khi đăng ký thành công, trả về một Entity tạm thời
-      return Right(UserEntity(id: 'temp', name: name, email: email));
->>>>>>> origin/feature
     } catch (e) {
       return Left(e.toString().replaceAll('Exception: ', ''));
     }
@@ -54,13 +43,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
-<<<<<<< HEAD
     await Future.delayed(const Duration(milliseconds: 500));
   }
 }
-=======
-
-    await Future.delayed(const Duration(milliseconds: 500));
-  }
-}
->>>>>>> origin/feature

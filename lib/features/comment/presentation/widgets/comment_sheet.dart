@@ -8,8 +8,8 @@ import 'comment_item.dart';
 import '../../../post/presentation/bloc/post_bloc.dart';
 import '../../../post/presentation/bloc/post_event.dart';
 import '../../../post/presentation/bloc/post_state.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart' as auth;
+import '../../../auth/presentation/bloc/auth_state.dart' as auth;
 
 class CommentSheet extends StatefulWidget {
   final String postId;
@@ -44,18 +44,18 @@ class _CommentSheetState extends State<CommentSheet> {
     if (text.isEmpty) return;
 
     // Lấy thông tin User từ AuthBloc để đảm bảo hiện đúng tên đã đăng ký
-    final authState = context.read<AuthBloc>().state;
+    final authState = context.read<auth.AuthBloc>().state;
 
-    if (authState is AuthSuccess) {
+    if (authState is auth.AuthSuccess) {
       context.read<CommentBloc>().add(
-        SubmitComment(
-          postId: widget.postId,
-          content: text,
-          userId: authState.user.id,     // Lấy ID thật từ Auth
-          userName: authState.user.name, // Lấy Tên thật từ Auth
-          parentCommentId: _replyingTo?.id,
-        ),
-      );
+            SubmitComment(
+              postId: widget.postId,
+              content: text,
+              userId: authState.user.id, // Lấy ID thật từ Auth
+              userName: authState.user.name, // Lấy Tên thật từ Auth
+              parentCommentId: _replyingTo?.id,
+            ),
+          );
     } else {
       // Nếu chưa đăng nhập/đăng ký, có thể thông báo hoặc chặn nút gửi
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,7 +76,9 @@ class _CommentSheetState extends State<CommentSheet> {
           context.read<PostBloc>().add(const LoadPosts());
         } else if (state is CommentError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.redAccent),
+            SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.redAccent),
           );
         }
       },
@@ -91,7 +93,8 @@ class _CommentSheetState extends State<CommentSheet> {
             _buildDragHandle(),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
-              child: Text("Bình luận", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              child: Text("Bình luận",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ),
             const Divider(height: 1),
 
@@ -101,7 +104,8 @@ class _CommentSheetState extends State<CommentSheet> {
                 builder: (context, state) {
                   if (state is PostLoaded) {
                     try {
-                      final currentPost = state.posts.firstWhere((p) => p.id == widget.postId);
+                      final currentPost =
+                          state.posts.firstWhere((p) => p.id == widget.postId);
                       final comments = currentPost.comments;
 
                       if (comments.isEmpty) {
@@ -117,7 +121,8 @@ class _CommentSheetState extends State<CommentSheet> {
                         ),
                       );
                     } catch (e) {
-                      return const Center(child: Text("Không tìm thấy bài viết"));
+                      return const Center(
+                          child: Text("Không tìm thấy bài viết"));
                     }
                   }
                   return const Center(child: CircularProgressIndicator());
@@ -136,8 +141,10 @@ class _CommentSheetState extends State<CommentSheet> {
   Widget _buildDragHandle() {
     return Container(
       margin: const EdgeInsets.only(top: 12),
-      height: 4, width: 40,
-      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+      height: 4,
+      width: 40,
+      decoration: BoxDecoration(
+          color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
     );
   }
 
@@ -147,8 +154,10 @@ class _CommentSheetState extends State<CommentSheet> {
       children: [
         Icon(Icons.chat_bubble_outline, size: 60, color: Colors.grey[300]),
         const SizedBox(height: 10),
-        const Text("Chưa có bình luận nào", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
-        const Text("Hãy là người đầu tiên chia sẻ ý kiến!", style: TextStyle(color: Colors.grey, fontSize: 12)),
+        const Text("Chưa có bình luận nào",
+            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
+        const Text("Hãy là người đầu tiên chia sẻ ý kiến!",
+            style: TextStyle(color: Colors.grey, fontSize: 12)),
       ],
     );
   }
@@ -157,7 +166,9 @@ class _CommentSheetState extends State<CommentSheet> {
     return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-        left: 12, right: 12, top: 8,
+        left: 12,
+        right: 12,
+        top: 8,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -165,8 +176,7 @@ class _CommentSheetState extends State<CommentSheet> {
           BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
-              offset: const Offset(0, -5)
-          )
+              offset: const Offset(0, -5))
         ],
       ),
       child: Column(
@@ -179,8 +189,7 @@ class _CommentSheetState extends State<CommentSheet> {
               margin: const EdgeInsets.only(bottom: 8.0),
               decoration: BoxDecoration(
                   color: Colors.blue.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8)
-              ),
+                  borderRadius: BorderRadius.circular(8)),
               child: Row(
                 children: [
                   const Icon(Icons.reply, size: 16, color: Colors.blue),
@@ -189,19 +198,22 @@ class _CommentSheetState extends State<CommentSheet> {
                     child: RichText(
                       text: TextSpan(
                         text: "Đang trả lời ",
-                        style: const TextStyle(color: Colors.black54, fontSize: 13),
+                        style: const TextStyle(
+                            color: Colors.black54, fontSize: 13),
                         children: [
                           TextSpan(
                               text: _replyingTo!.userName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)
-                          ),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue)),
                         ],
                       ),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => setState(() => _replyingTo = null),
-                    child: const Icon(Icons.cancel, size: 20, color: Colors.grey),
+                    child:
+                        const Icon(Icons.cancel, size: 20, color: Colors.grey),
                   ),
                 ],
               ),
@@ -211,13 +223,17 @@ class _CommentSheetState extends State<CommentSheet> {
           Row(
             children: [
               // Avatar người dùng hiện tại
-              BlocBuilder<AuthBloc, AuthState>(
+              BlocBuilder<auth.AuthBloc, auth.AuthState>(
                 builder: (context, state) {
-                  String initial = (state is AuthSuccess) ? state.user.name[0].toUpperCase() : "?";
+                  String initial = (state is auth.AuthSuccess)
+                      ? state.user.name[0].toUpperCase()
+                      : "?";
                   return CircleAvatar(
                     radius: 18,
                     backgroundColor: Colors.blueAccent,
-                    child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                    child: Text(initial,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 14)),
                   );
                 },
               ),
@@ -230,11 +246,11 @@ class _CommentSheetState extends State<CommentSheet> {
                   maxLines: 4,
                   decoration: InputDecoration(
                     hintText: "Viết bình luận...",
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(25),
-                        borderSide: BorderSide.none
-                    ),
+                        borderSide: BorderSide.none),
                     filled: true,
                     fillColor: Colors.grey[100],
                   ),
@@ -258,8 +274,7 @@ class _CommentSheetState extends State<CommentSheet> {
             child: SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2)
-            ),
+                child: CircularProgressIndicator(strokeWidth: 2)),
           );
         }
         return IconButton(

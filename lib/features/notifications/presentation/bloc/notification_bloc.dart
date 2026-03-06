@@ -1,17 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-<<<<<<< HEAD
-=======
 import '../../domain/entities/notification_entity.dart';
->>>>>>> origin/feature
 import 'notification_event.dart';
 import 'notification_state.dart';
 
 class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
   NotificationBloc() : super(NotificationLoading()) {
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/feature
     on<LoadNotifications>((event, emit) async {
       emit(NotificationLoading());
 
@@ -24,22 +17,14 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
 
     on<MarkAsRead>((event, emit) {
       if (state is NotificationLoaded) {
-<<<<<<< HEAD
-        final currentNotifications = (state as NotificationLoaded).notifications;
-=======
         final currentNotifications =
             (state as NotificationLoaded).notifications;
->>>>>>> origin/feature
         final updatedList = currentNotifications.map((n) {
           return n.id == event.notificationId ? n.copyWith(isRead: true) : n;
         }).toList();
         emit(NotificationLoaded(updatedList));
       }
     });
-<<<<<<< HEAD
-  }
-}
-=======
 
     on<NotificationReceived>((event, emit) {
       if (state is NotificationLoaded) {
@@ -58,4 +43,3 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     });
   }
 }
->>>>>>> origin/feature

@@ -19,7 +19,6 @@ import 'features/post/domain/usecases/toggle_like_usecase.dart';
 import 'features/post/presentation/bloc/post_bloc.dart';
 
 // --- IMPORT COMMENT ---
-import 'features/comment/data/repositories/comment_repository_impl.dart';
 import 'features/comment/domain/repositories/comment_repository.dart';
 import 'features/comment/domain/usecases/add_comment_usecase.dart';
 import 'features/comment/presentation/bloc/comment_bloc.dart';

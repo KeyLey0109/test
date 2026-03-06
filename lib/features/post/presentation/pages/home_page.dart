@@ -32,13 +32,13 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.watch<AuthBloc>().state;
-    final String uName = (authState is AuthSuccess) ? authState.user.name : "Sinh viên";
+    final String uName =
+        (authState is AuthSuccess) ? authState.user.name : "Sinh viên";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
       body: RefreshIndicator(
         onRefresh: () async {
-          // Kích hoạt load lại dữ liệu
           context.read<PostBloc>().add(const LoadPosts());
           context.read<NotificationBloc>().add(const LoadNotifications());
         },
@@ -97,7 +97,7 @@ class HomePage extends StatelessWidget {
           // Đảm bảo kiểu dữ liệu truyền vào PostCard là PostEntity
           return SliverList(
             delegate: SliverChildBuilderDelegate(
-                  (context, index) {
+              (context, index) {
                 final PostEntity post = state.posts[index];
                 return PostCard(key: ValueKey(post.id), post: post);
               },
@@ -108,7 +108,9 @@ class HomePage extends StatelessWidget {
 
         if (state is PostError) {
           return SliverFillRemaining(
-            child: Center(child: Text(state.message, style: const TextStyle(color: Colors.red))),
+            child: Center(
+                child: Text(state.message,
+                    style: const TextStyle(color: Colors.red))),
           );
         }
 
@@ -123,7 +125,8 @@ class HomePage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE4E6EB), width: 0.5)),
+        border:
+            Border(bottom: BorderSide(color: Color(0xFFE4E6EB), width: 0.5)),
       ),
       child: Row(
         children: [
@@ -137,7 +140,8 @@ class HomePage extends StatelessWidget {
             child: GestureDetector(
               onTap: () => _showCreatePostSheet(context, userName),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0F2F5),
                   borderRadius: BorderRadius.circular(20),
@@ -164,7 +168,9 @@ class HomePage extends StatelessWidget {
           children: [
             Icon(Icons.menu_book_rounded, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            const Text("Chưa có tin mới nào", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+            const Text("Chưa có tin mới nào",
+                style:
+                    TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -176,7 +182,8 @@ class HomePage extends StatelessWidget {
       builder: (context, state) {
         if (state is PostLoaded && state.isCreating) {
           return const SliverToBoxAdapter(
-            child: LinearProgressIndicator(minHeight: 2, color: Color(0xFF1877F2)),
+            child:
+                LinearProgressIndicator(minHeight: 2, color: Color(0xFF1877F2)),
           );
         }
         return const SliverToBoxAdapter(child: SizedBox.shrink());
@@ -188,9 +195,11 @@ class HomePage extends StatelessWidget {
     return PopupMenuButton<String>(
       onSelected: (value) {
         if (value == 'profile' && authState is AuthSuccess) {
-          Navigator.push(context, MaterialPageRoute(
-              builder: (_) => ProfileScreen(userId: authState.user.id, isCurrentUser: true)
-          ));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => ProfileScreen(
+                      userId: authState.user.id, isCurrentUser: true)));
         } else if (value == 'logout') {
           context.read<AuthBloc>().add(LogoutRequested());
         }
@@ -202,7 +211,9 @@ class HomePage extends StatelessWidget {
       ),
       itemBuilder: (context) => [
         const PopupMenuItem(value: 'profile', child: Text("Trang cá nhân")),
-        const PopupMenuItem(value: 'logout', child: Text("Đăng xuất", style: TextStyle(color: Colors.red))),
+        const PopupMenuItem(
+            value: 'logout',
+            child: Text("Đăng xuất", style: TextStyle(color: Colors.red))),
       ],
     );
   }
@@ -218,9 +229,11 @@ class HomePage extends StatelessWidget {
           icon: Badge(
             label: count > 0 ? Text('$count') : null,
             isLabelVisible: count > 0,
-            child: const Icon(Icons.notifications_none_rounded, color: Colors.black87),
+            child: const Icon(Icons.notifications_none_rounded,
+                color: Colors.black87),
           ),
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
+          onPressed: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const NotificationScreen())),
         );
       },
     );
@@ -235,12 +248,15 @@ class HomePage extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16, right: 16, top: 16,
+            left: 16,
+            right: 16,
+            top: 16,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -248,35 +264,52 @@ class HomePage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Tạo bài viết", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text("Tạo bài viết",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   TextButton(
                     onPressed: () {
-                      if (controller.text.trim().isNotEmpty || selectedImage != null || selectedVideo != null) {
-                        context.read<PostBloc>().add(CreatePostRequested(
-                          content: controller.text.trim(),
-                          userName: uName,
-                          image: selectedImage,
-                          video: selectedVideo,
-                        ));
+                      if (controller.text.trim().isNotEmpty ||
+                          selectedImage != null ||
+                          selectedVideo != null) {
+                        final authState = context.read<AuthBloc>().state;
+                        if (authState is AuthSuccess) {
+                          context.read<PostBloc>().add(CreatePostRequested(
+                                content: controller.text.trim(),
+                                userId: authState.user.id,
+                                userName: authState.user.name,
+                                imagePath: selectedImage?.path,
+                                videoPath: selectedVideo?.path,
+                                userAvatarUrl: authState.user.avatarUrl,
+                              ));
+                        }
                         Navigator.pop(context);
                       }
                     },
-                    child: const Text("ĐĂNG", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1877F2))),
+                    child: const Text("ĐĂNG",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1877F2))),
                   ),
                 ],
               ),
               TextField(
                 controller: controller,
                 maxLines: 5,
-                decoration: const InputDecoration(hintText: "Bạn đang nghĩ gì?", border: InputBorder.none),
+                decoration: const InputDecoration(
+                    hintText: "Bạn đang nghĩ gì?", border: InputBorder.none),
               ),
               if (selectedImage != null || selectedVideo != null)
                 ListTile(
                   leading: const Icon(Icons.attach_file, color: Colors.blue),
-                  title: const Text("File đã chọn", style: TextStyle(fontSize: 12)),
+                  title: const Text("File đã chọn",
+                      style: TextStyle(fontSize: 12)),
                   trailing: IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () => setModalState(() { selectedImage = null; selectedVideo = null; }),
+                    onPressed: () => setModalState(() {
+                      selectedImage = null;
+                      selectedVideo = null;
+                    }),
                   ),
                 ),
               Row(
@@ -284,15 +317,19 @@ class HomePage extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.image, color: Colors.green),
                     onPressed: () async {
-                      final XFile? file = await picker.pickImage(source: ImageSource.gallery);
-                      if (file != null) setModalState(() => selectedImage = File(file.path));
+                      final XFile? file =
+                          await picker.pickImage(source: ImageSource.gallery);
+                      if (file != null)
+                        setModalState(() => selectedImage = File(file.path));
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.videocam, color: Colors.red),
                     onPressed: () async {
-                      final XFile? file = await picker.pickVideo(source: ImageSource.gallery);
-                      if (file != null) setModalState(() => selectedVideo = File(file.path));
+                      final XFile? file =
+                          await picker.pickVideo(source: ImageSource.gallery);
+                      if (file != null)
+                        setModalState(() => selectedVideo = File(file.path));
                     },
                   ),
                 ],

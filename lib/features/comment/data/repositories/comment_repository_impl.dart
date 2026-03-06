@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/comment_entity.dart';
 import '../../domain/repositories/comment_repository.dart';
 import '../models/comment_model.dart';
@@ -19,14 +20,14 @@ class CommentRepositoryImpl implements CommentRepository {
     String? parentCommentId,
   }) async {
     try {
-      // SỬA LỖI TẠI ĐÂY: Đổi thành getLastPosts() cho khớp với DataSource của Việt
       final posts = await localDataSource.getLastPosts();
+      final index = posts.indexWhere((p) => p.id == postId);
+      if (index == -1) return const Left("Không tìm thấy bài viết");
 
-      final postIndex = posts.indexWhere((p) => p.id == postId);
-      if (postIndex == -1) return const Left("Không tìm thấy bài viết");
+      final post = posts[index];
 
       final newComment = CommentModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: "cmt_${DateTime.now().millisecondsSinceEpoch}",
         userId: userId,
         userName: userName,
         content: content,
@@ -34,37 +35,43 @@ class CommentRepositoryImpl implements CommentRepository {
         replies: const [],
       );
 
-      final currentPost = posts[postIndex];
-      List<CommentEntity> updatedComments = List.from(currentPost.comments);
+      final updatedComments = _getUpdatedComments(
+        post.comments,
+        parentCommentId,
+        newComment,
+      );
 
-      if (parentCommentId == null) {
-        updatedComments.add(newComment);
-      } else {
-        // Thuật toán đệ quy tìm cha để chèn Reply
-        _findAndAddReply(updatedComments, parentCommentId, newComment);
-      }
+      posts[index] = PostModel.fromEntity(
+        post.copyWith(comments: updatedComments),
+      );
 
-      // Cập nhật lại bài viết và lưu xuống SharedPreferences
-      posts[postIndex] = PostModel.fromEntity(currentPost.copyWith(comments: updatedComments));
       await localDataSource.cachePosts(posts);
-
       return const Right(null);
     } catch (e) {
-      return Left("Lỗi khi gửi bình luận: $e");
+      debugPrint("Lỗi addComment: $e");
+      return const Left("Lỗi khi gửi bình luận.");
     }
   }
 
-  // Hàm đệ quy xử lý đa tầng
-  void _findAndAddReply(List<CommentEntity> list, String parentId, CommentEntity reply) {
-    for (int i = 0; i < list.length; i++) {
-      if (list[i].id == parentId) {
-        list[i] = list[i].copyWith(replies: [...list[i].replies, reply]);
-        return;
-      }
-      if (list[i].replies.isNotEmpty) {
-        _findAndAddReply(list[i].replies, parentId, reply);
-      }
+  List<CommentEntity> _getUpdatedComments(
+    List<CommentEntity> currentList,
+    String? parentId,
+    CommentEntity newComment,
+  ) {
+    if (parentId == null) {
+      return [...currentList, newComment];
     }
+
+    return currentList.map((comment) {
+      if (comment.id == parentId) {
+        return comment.copyWith(replies: [...comment.replies, newComment]);
+      } else if (comment.replies.isNotEmpty) {
+        return comment.copyWith(
+          replies: _getUpdatedComments(comment.replies, parentId, newComment),
+        );
+      }
+      return comment;
+    }).toList();
   }
 
   @override

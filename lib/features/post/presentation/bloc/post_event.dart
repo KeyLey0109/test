@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-import 'dart:io';
->>>>>>> origin/feature
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/post_entity.dart';
 
@@ -13,9 +9,7 @@ abstract class PostEvent extends Equatable {
 }
 
 /// 1. Tải danh sách bài viết
-/// Được gọi khi mở App, Refresh trang hoặc sau khi đăng bài thành công.
 class LoadPosts extends PostEvent {
-<<<<<<< HEAD
   final String? userId;
   const LoadPosts({this.userId});
 
@@ -24,7 +18,6 @@ class LoadPosts extends PostEvent {
 }
 
 /// 2. Sự kiện đăng bài viết mới
-/// Chấp nhận đường dẫn File hình ảnh hoặc video từ bộ nhớ máy thông qua ImagePicker.
 class CreatePostRequested extends PostEvent {
   final String content;
   final String userId;
@@ -45,32 +38,9 @@ class CreatePostRequested extends PostEvent {
   @override
   List<Object?> get props =>
       [content, userId, userName, imagePath, videoPath, userAvatarUrl];
-=======
-  const LoadPosts();
-}
-
-/// 2. Sự kiện đăng bài viết mới
-/// Chấp nhận File hình ảnh hoặc video từ bộ nhớ máy thông qua ImagePicker.
-class CreatePostRequested extends PostEvent {
-  final String content;
-  final String? userName;
-  final File? image;
-  final File? video;
-
-  const CreatePostRequested({
-    required this.content,
-    this.userName,
-    this.image,
-    this.video,
-  });
-
-  @override
-  List<Object?> get props => [content, userName, image, video];
->>>>>>> origin/feature
 }
 
 /// 3. Sự kiện Thích/Bỏ thích bài viết (Toggle Like)
-/// Chỉ cần postId, việc xác định User ID sẽ do Bloc lấy từ AuthBloc.
 class ToggleLike extends PostEvent {
   final String postId;
 
@@ -81,7 +51,6 @@ class ToggleLike extends PostEvent {
 }
 
 /// 4. Sự kiện thêm bình luận
-/// Mang nội dung bình luận đến Bloc để tạo đối tượng CommentEntity mới.
 class AddComment extends PostEvent {
   final String postId;
   final String commentContent;
@@ -96,7 +65,6 @@ class AddComment extends PostEvent {
 }
 
 /// 5. Cập nhật bài viết cục bộ (Local Update)
-/// Dùng để cập nhật ngay lập tức một bài viết cụ thể trong danh sách mà không cần reload toàn bộ.
 class UpdatePost extends PostEvent {
   final PostEntity post;
 
@@ -107,7 +75,6 @@ class UpdatePost extends PostEvent {
 }
 
 /// 6. Xóa bài viết
-/// Chỉnh sửa named parameter để đồng bộ với cách gọi trong Bloc.
 class DeletePost extends PostEvent {
   final String postId;
 
@@ -115,8 +82,4 @@ class DeletePost extends PostEvent {
 
   @override
   List<Object?> get props => [postId];
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> origin/feature
