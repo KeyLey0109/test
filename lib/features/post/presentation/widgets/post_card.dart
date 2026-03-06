@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -203,10 +204,12 @@ class _PostCardState extends State<PostCard> {
         if (post.hasImage)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
-            child: post.imagePath!.startsWith('http')
+            child: post.imagePath!.startsWith('http') ||
+                    post.imagePath!.startsWith('blob:') ||
+                    kIsWeb
                 ? Image.network(post.imagePath!,
                     width: double.infinity, fit: BoxFit.cover)
-                : Image.file(File(post.imagePath!),
+                : Image.file(io.File(post.imagePath!),
                     width: double.infinity, fit: BoxFit.cover),
           ),
         if (post.hasVideo)

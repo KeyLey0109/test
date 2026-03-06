@@ -1,12 +1,11 @@
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class PostVideoPlayer extends StatefulWidget {
   final String videoPath;
 
-  // Sửa lỗi: Đảm bảo constructor có thể dùng const nếu cần,
-  // nhưng lưu ý khi truyền File vào initState thì nó là biến động.
   const PostVideoPlayer({super.key, required this.videoPath});
 
   @override
@@ -22,12 +21,14 @@ class _PostVideoPlayerState extends State<PostVideoPlayer> {
   @override
   void initState() {
     super.initState();
-    // Khởi tạo controller từ đường dẫn file trên máy sinh viên PYU hoặc URL mạng
-    if (widget.videoPath.startsWith('http')) {
+    // Khởi tạo controller từ đường dẫn file
+    if (widget.videoPath.startsWith('http') ||
+        widget.videoPath.startsWith('blob:') ||
+        kIsWeb) {
       _controller =
           VideoPlayerController.networkUrl(Uri.parse(widget.videoPath));
     } else {
-      _controller = VideoPlayerController.file(File(widget.videoPath));
+      _controller = VideoPlayerController.file(io.File(widget.videoPath));
     }
 
     _controller.initialize().then((_) {

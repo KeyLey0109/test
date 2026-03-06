@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -241,8 +240,8 @@ class HomePage extends StatelessWidget {
 
   void _showCreatePostSheet(BuildContext context, String uName) {
     final TextEditingController controller = TextEditingController();
-    File? selectedImage;
-    File? selectedVideo;
+    XFile? selectedImage;
+    XFile? selectedVideo;
     final ImagePicker picker = ImagePicker();
 
     showModalBottomSheet(
@@ -320,7 +319,7 @@ class HomePage extends StatelessWidget {
                       final XFile? file =
                           await picker.pickImage(source: ImageSource.gallery);
                       if (file != null) {
-                        setModalState(() => selectedImage = File(file.path));
+                        setModalState(() => selectedImage = file);
                       }
                     },
                   ),
@@ -330,7 +329,7 @@ class HomePage extends StatelessWidget {
                       final XFile? file =
                           await picker.pickVideo(source: ImageSource.gallery);
                       if (file != null) {
-                        setModalState(() => selectedVideo = File(file.path));
+                        setModalState(() => selectedVideo = file);
                       }
                     },
                   ),
