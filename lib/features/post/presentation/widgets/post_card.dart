@@ -50,11 +50,13 @@ class _PostCardState extends State<PostCard> {
         PostEntity displayPost = widget.post;
 
         if (state is PostLoaded) {
-          // Lấy dữ liệu mới nhất của bài viết này từ State của Bloc
-          displayPost = state.posts.firstWhere(
-            (p) => p.id == widget.post.id,
-            orElse: () => widget.post,
-          );
+          // Lấy dữ liệu mới nhất của bài viết này từ State của Bloc một cách an toàn cho Web
+          for (final p in state.posts) {
+            if (p.id == widget.post.id) {
+              displayPost = p;
+              break;
+            }
+          }
         }
 
         // Sử dụng getter isLikedBy và likeCount từ PostEntity mới

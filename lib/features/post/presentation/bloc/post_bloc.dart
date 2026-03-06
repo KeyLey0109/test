@@ -66,7 +66,7 @@ class PostBloc extends Bloc<PostEvent, PostState> {
 
     final localPosts = await localDataSource.getLastPosts();
     if (localPosts.isNotEmpty) {
-      emit(PostLoaded(posts: localPosts));
+      emit(PostLoaded(posts: List<PostEntity>.from(localPosts)));
     }
 
     final result = await getPostsUseCase(userId: event.userId);

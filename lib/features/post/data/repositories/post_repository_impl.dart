@@ -64,7 +64,7 @@ class PostRepositoryImpl implements PostRepository, CommentRepository {
         await localDataSource.cachePosts(_postsCache);
       }
 
-      return Right(filteredPosts.cast<PostEntity>());
+      return Right(filteredPosts.map((e) => e as PostEntity).toList());
     } catch (e) {
       debugPrint("Lỗi nghiêm trọng tại getPosts: $e");
       return const Left("Không thể tải bài viết.");
