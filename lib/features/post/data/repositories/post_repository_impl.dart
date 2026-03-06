@@ -104,7 +104,9 @@ class PostRepositoryImpl implements PostRepository, CommentRepository {
       );
 
       _postsCache.insert(0, newPost);
+      // Lưu vào cả phân vùng của User và Feed chung để đồng bộ Home Feed
       await localDataSource.cachePosts(_postsCache, userId: userId);
+      await localDataSource.cachePosts(_postsCache, userId: null);
       return const Right(null);
     } catch (e) {
       debugPrint("Lỗi khi lưu bài viết: $e");

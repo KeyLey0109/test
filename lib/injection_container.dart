@@ -47,7 +47,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
   sl.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(fakeDataSource: sl()));
-  sl.registerLazySingleton(() => FakeAuthDataSource());
+  sl.registerLazySingleton(() => FakeAuthDataSource(sharedPreferences: sl()));
 
   //! 3. FEATURES - POST
   sl.registerFactoryParam<PostBloc, AuthBloc, NotificationBloc>(

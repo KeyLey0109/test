@@ -40,7 +40,9 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
                 ? "Người dùng ${userId.substring(5)}"
                 : "Sinh viên PYU"),
         email: existingUser['email'] ?? "student.$userId@pyu.edu.vn",
-        birthDate: existingUser['birthDate'] as DateTime?, // Lấy từ memory
+        birthDate: existingUser['birthDate'] != null
+            ? DateTime.tryParse(existingUser['birthDate'].toString())
+            : null,
         bio: existingUser['bio'] ?? // Lấy từ memory
             (existingUser['id'] == 'admin'
                 ? "Quản trị viên hệ thống StudyHub"

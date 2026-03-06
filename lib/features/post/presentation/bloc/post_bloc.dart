@@ -75,8 +75,9 @@ class PostBloc extends Bloc<PostEvent, PostState> {
     _currentUserId = authUser?.id;
     emit(PostLoading());
 
-    // Luôn ưu tiên dùng ID của người đang đăng nhập để load cache local
-    final localPosts = await localDataSource.getLastPosts(userId: authUser?.id);
+    // Nếu event.userId là null (Home Feed), load từ phân vùng Global
+    // Nếu event.userId != null (Wall), load từ phân vùng của User đó
+    final localPosts = await localDataSource.getLastPosts(userId: event.userId);
     if (localPosts.isNotEmpty) {
       emit(PostLoaded(posts: List<PostEntity>.from(localPosts)));
     }
